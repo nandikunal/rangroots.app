@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rangroots-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "NEXT_PUBLIC_CALENDAR_API_BASE": "https://rangroots.onrender.com",
+    "NEXT_PUBLIC_EVENTS_API_BASE": "https://rangroots-events-service.onrender.com"
+  }
+}
