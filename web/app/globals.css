@@ -1,0 +1,59 @@
+/* Zen / spiritual design tokens for Rang Roots.
+   Deep indigo dusk -> warm saffron dawn gradient, soft translucent cards,
+   generous whitespace. Deliberately calmer than a dense blog-style layout. */
+
+:root {
+  --zen-indigo-950: #1a1730;
+  --zen-indigo-900: #241f42;
+  --zen-indigo-800: #322a5c;
+  --zen-saffron-400: #f4a94f;
+  --zen-saffron-300: #f8c07a;
+  --zen-rose-300: #f0b7a4;
+  --zen-mist: #f7f4ef;
+  --zen-ink: #2c2640;
+  --zen-ink-soft: #6b6280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--zen-mist);
+  color: var(--zen-ink);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.zen-serif {
+  font-family: var(--font-display), "Georgia", serif;
+}
+
+.zen-sans {
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.zen-glow-ring {
+  box-shadow: 0 0 0 1px rgba(244, 169, 79, 0.35), 0 8px 40px -12px rgba(244, 169, 79, 0.45);
+}
+
+.zen-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.zen-card-today {
+  background: linear-gradient(135deg, rgba(244, 169, 79, 0.16), rgba(240, 183, 164, 0.12));
+  border: 1px solid rgba(244, 169, 79, 0.45);
+}
+
+.zen-hero {
+  background: radial-gradient(circle at 50% 0%, var(--zen-indigo-800) 0%, var(--zen-indigo-950) 65%);
+}
+
+.zen-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(107, 98, 128, 0.25), transparent);
+}
