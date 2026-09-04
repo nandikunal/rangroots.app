@@ -30,7 +30,14 @@ const CATEGORY_META: Record<string, { label: string; accent: string; emoji: stri
 const CATEGORY_ORDER = ["festival", "deity", "observance", "other"];
 
 // Major festivals get a visual weight bump (larger card treatment).
-const MAJOR_FESTIVALS = new Set(["diwali", "holi", "navratri"]);
+// Matched against the lowercased festival name — the API's FestivalEntry
+// type doesn't expose a stable id field.
+const MAJOR_FESTIVAL_KEYWORDS = ["diwali", "holi", "navratri", "deepavali"];
+
+function isMajorFestival(name: string): boolean {
+  const lower = name.toLowerCase();
+  return MAJOR_FESTIVAL_KEYWORDS.some((k) => lower.includes(k));
+}
 
 function formatCountdown(targetIso: string | undefined): string | null {
   if (!targetIso) return null;
@@ -224,7 +231,7 @@ export default function CalendarPage() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {list.map((f) => {
                     const isToday = f.date === date;
-                    const isMajor = MAJOR_FESTIVALS.has(f.id);
+                    const isMajor = isMajorFestival(f.name);
                     return (
                       <div
                         key={f.name + f.date}
