@@ -1,5 +1,7 @@
 // Shared API client for the Calendar & Events services.
 // Mirrors the endpoints defined in rangroots.api.
+// Calendar and Events are now surfaced together on a single /calendar page,
+// so this client exposes both panchang/festival data and city events.
 
 const CALENDAR_API_BASE = process.env.NEXT_PUBLIC_CALENDAR_API_BASE ?? "http://localhost:8000";
 const EVENTS_API_BASE = process.env.NEXT_PUBLIC_EVENTS_API_BASE ?? "http://localhost:8001";
@@ -18,6 +20,13 @@ export interface DailyPanchang {
   muhurtas: Record<string, unknown>;
 }
 
+export interface FestivalEntry {
+  name: string;
+  date: string; // YYYY-MM-DD, city-local
+  category: "festival" | "deity" | "observance" | "other";
+  description?: string;
+}
+
 export interface EventSummary {
   id: string;
   city_id: string;
@@ -30,9 +39,22 @@ export interface EventSummary {
   is_free: boolean;
 }
 
+export const CITIES = [
+  { id: "berlin", label: "Berlin" },
+  { id: "munich", label: "Munich" },
+  { id: "hamburg", label: "Hamburg" },
+  { id: "frankfurt", label: "Frankfurt" },
+];
+
 export async function getDailyPanchang(date: string, cityId: string): Promise<DailyPanchang> {
   const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/daily?date=${date}&city_id=${cityId}`);
   if (!res.ok) throw new Error("Failed to fetch daily panchang");
+  return res.json();
+}
+
+export async function getFestivals(year: number, cityId: string): Promise<FestivalEntry[]> {
+  const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/festivals?year=${year}&city_id=${cityId}`);
+  if (!res.ok) throw new Error("Failed to fetch festivals");
   return res.json();
 }
 
