@@ -14,7 +14,7 @@ import {
 // Same data flow as before; adds scroll-staggered fade-in via a single
 // IntersectionObserver, hover lift/glow on cards, a live countdown chip
 // in the hero showing time until the next muhurta band, a custom-styled
-// city dropdown, and muted Devanagari glyphs as background flourishes.
+// city dropdown, and muted ambient glyphs as background flourishes.
 // No animation library — pure CSS + IntersectionObserver, edge-safe.
 
 function todayISO() {
@@ -22,10 +22,10 @@ function todayISO() {
 }
 
 const CATEGORY_META: Record<string, { label: string; accent: string; emoji: string }> = {
-  festival: { label: "Hindu Festivals", accent: "text-orange-700", emoji: "\u{1F3EE}" },
-  deity: { label: "Celebrating Deities", accent: "text-purple-700", emoji: "\u{1F6D5}" },
-  observance: { label: "Hindu Observances", accent: "text-blue-700", emoji: "\u{1F4FF}" },
-  other: { label: "Other Dharma Traditions", accent: "text-emerald-700", emoji: "\u2728" },
+  festival: { label: "Hindu Festivals", accent: "text-orange-700", emoji: String.fromCharCode(0x1F3EE) },
+  deity: { label: "Celebrating Deities", accent: "text-purple-700", emoji: String.fromCharCode(0x1F6D5) },
+  observance: { label: "Hindu Observances", accent: "text-blue-700", emoji: String.fromCharCode(0x1F4FF) },
+  other: { label: "Other Dharma Traditions", accent: "text-emerald-700", emoji: String.fromCharCode(0x2728) },
 };
 const CATEGORY_ORDER = ["festival", "deity", "observance", "other"];
 
@@ -132,8 +132,8 @@ export default function CalendarPage() {
     <main className="min-h-screen bg-[var(--zen-mist)]">
       {/* Hero: meditative "today" focal point with ambient glyphs + live countdown */}
       <section className="zen-hero text-white px-6 py-16 md:py-24">
-        <span className="zen-glyph-bg" style={{ top: "-2rem", left: "-3rem" }}>\u0950</span>
-        <span className="zen-glyph-bg" style={{ bottom: "-3rem", right: "-2rem", fontSize: "12rem" }}>\u0924\u093F\u0925\u093F</span>
+        <span className="zen-glyph-bg" style={{ top: "-2rem", left: "-3rem" }} aria-hidden="true">ॐ</span>
+        <span className="zen-glyph-bg" style={{ bottom: "-3rem", right: "-2rem", fontSize: "12rem" }} aria-hidden="true">॥</span>
         <div className="mx-auto max-w-3xl text-center relative">
           <p className="zen-sans text-xs tracking-[0.3em] uppercase text-white/50 mb-4">
             Today &middot; {new Date(date).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
@@ -162,8 +162,8 @@ export default function CalendarPage() {
               )}
 
               <div className="flex justify-center gap-10 text-white/70 text-sm mb-6">
-                <span>\u2600\uFE0F Sunrise &middot; {panchang.sunrise?.slice(11, 16)}</span>
-                <span>\u{1F319} Sunset &middot; {panchang.sunset?.slice(11, 16)}</span>
+                <span>&#9728;&#65039; Sunrise &middot; {panchang.sunrise?.slice(11, 16)}</span>
+                <span>&#127769; Sunset &middot; {panchang.sunset?.slice(11, 16)}</span>
               </div>
 
               <button
@@ -259,7 +259,7 @@ export default function CalendarPage() {
 
         <div className="mt-20 fade-section">
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-xl">\u{1F3D9}\uFE0F</span>
+            <span className="text-xl">&#127961;&#65039;</span>
             <h3 className="zen-serif text-2xl font-medium text-[var(--zen-ink)]">
               Gathering in {CITIES.find((c) => c.id === cityId)?.label}
             </h3>
