@@ -93,8 +93,8 @@ export default function CalendarPage() {
               )}
 
               <div className="flex justify-center gap-10 text-white/70 text-sm mb-6">
-                <span>\u2600\uFE0F Sunrise &middot; {panchang.sunrise?.slice(11, 16)}</span>
-                <span>\u{1F319} Sunset &middot; {panchang.sunset?.slice(11, 16)}</span>
+                <span>☀️ Sunrise &middot; {panchang.sunrise?.slice(11, 16)}</span>
+                <span>🌙 Sunset &middot; {panchang.sunset?.slice(11, 16)}</span>
               </div>
 
               <button
@@ -186,7 +186,7 @@ export default function CalendarPage() {
         {/* City events, visually distinct closing section */}
         <div className="mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-xl">\u{1F3D9}\uFE0F</span>
+            <span className="text-xl">🏙️</span>
             <h3 className="zen-serif text-2xl font-medium text-[var(--zen-ink)]">
               Gathering in {CITIES.find((c) => c.id === cityId)?.label}
             </h3>
