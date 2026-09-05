@@ -1,24 +1,37 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 
-// Serif for the meditative "today" focal point and section headers;
-// Inter for body copy — a calmer, less clinical pairing than a default
-// system sans everywhere.
-const display = Cormorant_Garamond({
+// Fraunces gives display text a crafted editorial feel while Manrope
+// keeps dense date/event content legible across cards and tables.
+const display = Fraunces({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display",
 });
 
-const body = Inter({
+const body = Manrope({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-body",
 });
 
 export const metadata: Metadata = {
-  title: "Rang Roots — Panchang & Community Calendar",
-  description: "A calm, modern space for the Hindu calendar, muhurta, and Indian community events in your city.",
+  title: "Rangroots.app — Panchang & Community Calendar",
+  description: "Celebrating Heritage & Culture through the Panchang, festival observances, and community calendar.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Rang Roots",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Rang Roots",
+  },
+};
+
+export const viewport = {
+  themeColor: "#1f2937",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

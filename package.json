@@ -1,0 +1,13 @@
+{
+  "name": "rangroots.app",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm --workspace web run dev",
+    "lint": "npm --workspace web run lint",
+    "build": "npm --workspace web run build",
+    "test": "npm run lint && npm run build"
+  }
+}

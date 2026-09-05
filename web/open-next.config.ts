@@ -5,7 +5,7 @@
 // processing -- correct defaults for an MVP with no ISR/on-demand
 // revalidation requirements yet. Revisit if/when calendar page caching
 // (e.g. daily panchang) needs real incremental cache backing (KV, R2, etc).
-export default {
+const config = {
   default: {
     override: {
       wrapper: "cloudflare-node",
@@ -16,4 +16,18 @@ export default {
       queue: "direct",
     },
   },
+  edgeExternals: ["node:crypto"],
+  middleware: {
+    external: true,
+    override: {
+      wrapper: "cloudflare-edge",
+      converter: "edge",
+      proxyExternalRequest: "fetch",
+      incrementalCache: "dummy",
+      tagCache: "dummy",
+      queue: "direct",
+    },
+  },
 };
+
+export default config;

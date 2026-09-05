@@ -67,19 +67,22 @@ export default function CalendarPage() {
   const year = useMemo(() => new Date(date).getFullYear(), [date]);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    let cancelled = false;
     Promise.allSettled([
       getDailyPanchang(date, cityId),
       getFestivals(year, cityId),
       listEvents({ cityId, from: date }),
     ]).then(([p, f, e]) => {
+      if (cancelled) return;
       if (p.status === "fulfilled") setPanchang(p.value);
       else setError("Panchang data isn't available yet.");
       if (f.status === "fulfilled") setFestivals(f.value);
       if (e.status === "fulfilled") setEvents(e.value.slice(0, 6));
       setLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [date, cityId, year]);
 
   // Live countdown to the next muhurta band (Abhijit or Rahu Kaal, whichever is next)
@@ -200,7 +203,11 @@ export default function CalendarPage() {
         <div className="flex justify-center">
           <select
             value={cityId}
-            onChange={(e) => setCityId(e.target.value)}
+            onChange={(e) => {
+              setLoading(true);
+              setError(null);
+              setCityId(e.target.value);
+            }}
             className="zen-select"
           >
             {CITIES.map((c) => (
