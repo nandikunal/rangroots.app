@@ -1,16 +1,24 @@
 "use client";
 
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   getHomepageContent,
   type HomepageContentRequest,
   type CalendarHighlight,
+  type DailyPanchang,
   type EventSummary,
   type FestivalEntry,
+  type MonthlyPanchangResponse,
+  CITIES,
 } from "@/lib/api";
 import { formatLocationStatus, readPreferences, updatePreferences } from "@/lib/preferences";
 import rangrootsLogo from "../res/rangroots.png";
+
+const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
 
 function BrandEmblem() {
   return (
@@ -25,9 +33,6 @@ function BrandEmblem() {
 }
 
 const LANDING_CITY_ID = "berlin";
-const LANDING_MONTH = "2026-09";
-const LANDING_YEAR = 2026;
-const WEEKDAY_HEADINGS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 type GuideGroup = {
   key: FestivalEntry["category"];
@@ -58,6 +63,61 @@ const GUIDE_GROUP_META: Record<FestivalEntry["category"], Omit<GuideGroup, "item
 function parseDateOnly(dateString: string): Date {
   const [year, month, day] = dateString.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day));
+}
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function toMonthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthContainsDate(monthKey: string, dateString: string): boolean {
+  return dateString.startsWith(`${monthKey}-`);
+}
+
+function addDays(dateString: string, days: number): string {
+  const date = parseDateOnly(dateString);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function toEventLocalDate(value: string): string {
+  return value.slice(0, 10);
+}
+
+function eventOccursOnDate(item: EventSummary, dateString: string): boolean {
+  const start = toEventLocalDate(item.start_datetime);
+  const end = toEventLocalDate(item.end_datetime ?? item.start_datetime);
+  return start <= dateString && end >= dateString;
+}
+
+function getMonthLabel(monthKey: string): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function getDateHeading(dateString: string): string {
+  return parseDateOnly(dateString).toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function shortenTithi(tithi: string): string {
+  return tithi.replace("Shukla ", "S. ").replace("Krishna ", "K. ");
 }
 
 function formatDateOnly(dateString: string, options: Intl.DateTimeFormatOptions): string {
@@ -107,90 +167,91 @@ function buildGuideGroups(festivals: FestivalEntry[]): GuideGroup[] {
   }));
 }
 
-function buildCalendarCells(month: string): string[] {
-  const [year, monthNumber] = month.split("-").map(Number);
-  const firstDay = new Date(Date.UTC(year, monthNumber - 1, 1));
-  const leadingBlanks = (firstDay.getUTCDay() + 6) % 7;
-  const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+function buildCalendarEvents(highlights: CalendarHighlight[], events: EventSummary[]) {
+  const highlightEvents = highlights.map((highlight) => ({
+    id: `highlight-${highlight.id}`,
+    title: highlight.name,
+    start: highlight.start_date,
+    end: addDays(highlight.end_date, 1),
+    allDay: true,
+    classNames: ["rangroots-highlight", `rangroots-highlight-${highlight.category}`],
+  }));
 
-  const cells = [...WEEKDAY_HEADINGS, ...Array.from({ length: leadingBlanks }, () => "")];
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    cells.push(String(day));
-  }
-  while (cells.length < 49) {
-    cells.push("");
-  }
-  return cells;
-}
+  const communityEvents = events.map((event) => ({
+    id: event.id,
+    title: event.title,
+    start: event.start_datetime,
+    end: event.end_datetime,
+    allDay: false,
+    classNames: ["rangroots-community-event"],
+  }));
 
-function buildCalendarBars(highlights: CalendarHighlight[], month: string) {
-  const [year, monthNumber] = month.split("-").map(Number);
-  const monthStart = new Date(Date.UTC(year, monthNumber - 1, 1));
-  const monthEnd = new Date(Date.UTC(year, monthNumber, 0));
-  const leadingBlanks = (monthStart.getUTCDay() + 6) % 7;
-
-  return highlights.flatMap((highlight) => {
-    const originalStart = parseDateOnly(highlight.start_date);
-    const originalEnd = parseDateOnly(highlight.end_date);
-
-    if (originalEnd < monthStart || originalStart > monthEnd) {
-      return [];
-    }
-
-    const start = originalStart < monthStart ? monthStart : originalStart;
-    const end = originalEnd > monthEnd ? monthEnd : originalEnd;
-    const segments: Array<{ key: string; name: string; gridColumn: string; gridRow: string }> = [];
-    let cursor = new Date(start);
-    let index = 0;
-
-    while (cursor <= end) {
-      const weekdayIndex = (cursor.getUTCDay() + 6) % 7;
-      const weekIndex = Math.floor((leadingBlanks + cursor.getUTCDate() - 1) / 7);
-      const weekEnd = new Date(cursor);
-      weekEnd.setUTCDate(cursor.getUTCDate() + (6 - weekdayIndex));
-      const segmentEnd = weekEnd < end ? weekEnd : end;
-      const span = Math.round((segmentEnd.getTime() - cursor.getTime()) / 86400000) + 1;
-
-      segments.push({
-        key: `${highlight.id}-${index}`,
-        name: highlight.name,
-        gridColumn: `${weekdayIndex + 1} / span ${span}`,
-        gridRow: String(2 + weekIndex),
-      });
-
-      cursor = new Date(segmentEnd);
-      cursor.setUTCDate(segmentEnd.getUTCDate() + 1);
-      index += 1;
-    }
-
-    return segments;
-  });
+  return [...highlightEvents, ...communityEvents];
 }
 
 export default function HomePage() {
   const [locationStatus, setLocationStatus] = useState("Waiting for location consent");
-  const [upcoming, setUpcoming] = useState<EventSummary[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState(LANDING_CITY_ID);
+  const [selectedMonth, setSelectedMonth] = useState(() => startOfMonth(new Date()));
+  const [selectedDate, setSelectedDate] = useState(todayISO());
+  const [savedCoords, setSavedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [monthData, setMonthData] = useState<MonthlyPanchangResponse | null>(null);
+  const [monthEvents, setMonthEvents] = useState<EventSummary[]>([]);
   const [guideGroups, setGuideGroups] = useState<GuideGroup[]>([]);
   const [calendarHighlights, setCalendarHighlights] = useState<CalendarHighlight[]>([]);
+  const [resolvedCityName, setResolvedCityName] = useState("Berlin");
+  const [resolvedTimezone, setResolvedTimezone] = useState("Europe/Berlin");
   const [contentLoading, setContentLoading] = useState(true);
   const [contentError, setContentError] = useState<string | null>(null);
 
-  const calendarCells = useMemo(() => buildCalendarCells(LANDING_MONTH), []);
-  const calendarBars = useMemo(() => buildCalendarBars(calendarHighlights, LANDING_MONTH), [calendarHighlights]);
+  const monthKey = useMemo(() => toMonthKey(selectedMonth), [selectedMonth]);
+  const selectedYear = useMemo(() => selectedMonth.getFullYear(), [selectedMonth]);
+  const calendarEvents = useMemo(() => buildCalendarEvents(calendarHighlights, monthEvents), [calendarHighlights, monthEvents]);
+  const panchangByDate = useMemo(() => {
+    const entries = new Map<string, DailyPanchang>();
+    monthData?.days.forEach((day) => entries.set(day.date, day));
+    return entries;
+  }, [monthData]);
+  const selectedDay = useMemo(() => panchangByDate.get(selectedDate) ?? null, [panchangByDate, selectedDate]);
+  const selectedDayEvents = useMemo(
+    () => monthEvents.filter((event) => eventOccursOnDate(event, selectedDate)),
+    [monthEvents, selectedDate]
+  );
+  const visibleUpcoming = useMemo(() => {
+    const upcomingFromSelectedDay = monthEvents.filter(
+      (event) => toEventLocalDate(event.end_datetime ?? event.start_datetime) >= selectedDate
+    );
+    return (selectedDayEvents.length > 0 ? selectedDayEvents : upcomingFromSelectedDay).slice(0, 6);
+  }, [monthEvents, selectedDate, selectedDayEvents]);
+
+  useEffect(() => {
+    const preferences = readPreferences();
+    setSelectedCityId(preferences.preferredCityId);
+    if (preferences.savedCoords) {
+      setSavedCoords({ latitude: preferences.savedCoords.latitude, longitude: preferences.savedCoords.longitude });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!monthContainsDate(monthKey, selectedDate)) {
+      setSelectedDate(`${monthKey}-01`);
+    }
+  }, [monthKey, selectedDate]);
 
   useEffect(() => {
     let cancelled = false;
-    const preferences = readPreferences();
     const homepageRequest: HomepageContentRequest = {
-      month: LANDING_MONTH,
-      year: LANDING_YEAR,
-      cityId: preferences.preferredCityId,
+      month: monthKey,
+      year: selectedYear,
+      cityId: selectedCityId,
     };
 
-    if (preferences.savedCoords) {
-      homepageRequest.lat = preferences.savedCoords.latitude;
-      homepageRequest.lng = preferences.savedCoords.longitude;
+    if (savedCoords) {
+      homepageRequest.lat = savedCoords.latitude;
+      homepageRequest.lng = savedCoords.longitude;
     }
+
+    setContentLoading(true);
 
     getHomepageContent(homepageRequest)
       .then((payload) => {
@@ -198,9 +259,12 @@ export default function HomePage() {
           return;
         }
 
+        setMonthData(payload.monthData);
         setGuideGroups(buildGuideGroups(payload.festivals));
         setCalendarHighlights(payload.highlights);
-        setUpcoming(payload.events.slice(0, 5));
+        setMonthEvents(payload.events);
+        setResolvedCityName(payload.resolvedCityName ?? CITIES.find((city) => city.id === payload.resolvedCityId)?.label ?? "Berlin");
+        setResolvedTimezone(payload.timezone ?? "Europe/Berlin");
 
         if (payload.errors.length > 0) {
           setContentError("Some live calendar data is temporarily unavailable.");
@@ -224,7 +288,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [monthKey, savedCoords, selectedCityId, selectedYear]);
 
   useEffect(() => {
     setLocationStatus(formatLocationStatus(readPreferences()));
@@ -259,14 +323,87 @@ export default function HomePage() {
             updatedAt: new Date().toISOString(),
           },
         });
+        setSavedCoords({ latitude, longitude });
         setLocationStatus(formatLocationStatus(next));
       },
       () => {
         const next = updatePreferences({ locationPermission: "denied", savedCoords: undefined });
+        setSavedCoords(null);
         setLocationStatus(formatLocationStatus(next));
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
+  };
+
+  const handleCityChange = (cityId: string) => {
+    const next = updatePreferences({ preferredCityId: cityId, savedCoords: undefined });
+    setSelectedCityId(cityId);
+    setSavedCoords(null);
+    setLocationStatus(formatLocationStatus(next));
+  };
+
+  const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
+    setSelectedMonth(startOfMonth(arg.view.currentStart));
+  };
+
+  const handleDateClick = (arg: { dateStr: string }) => {
+    setSelectedDate(arg.dateStr);
+  };
+
+  const decorateDayCell = (arg: { date: Date; el: HTMLElement }) => {
+    const dayInfo = panchangByDate.get(arg.date.toISOString().slice(0, 10));
+    const frame = arg.el.querySelector(".fc-daygrid-day-frame");
+
+    if (!frame) {
+      return;
+    }
+
+    const existing = frame.querySelector(".rangroots-day-meta");
+    if (existing) {
+      existing.remove();
+    }
+
+    if (!dayInfo) {
+      return;
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "rangroots-day-meta";
+
+    const tithi = document.createElement("span");
+    tithi.className = "rangroots-day-tithi";
+    tithi.textContent = shortenTithi(dayInfo.tithi);
+    meta.appendChild(tithi);
+
+    if (dayInfo.festivals.length > 0) {
+      const count = document.createElement("span");
+      count.className = "rangroots-day-count";
+      count.textContent = `${dayInfo.festivals.length} observance${dayInfo.festivals.length > 1 ? "s" : ""}`;
+      meta.appendChild(count);
+    }
+
+    frame.appendChild(meta);
+  };
+
+  const calendarProps: Record<string, unknown> = {
+    plugins: [dayGridPlugin, interactionPlugin],
+    initialView: "dayGridMonth",
+    initialDate: selectedDate,
+    fixedWeekCount: false,
+    selectable: true,
+    weekends: true,
+    events: calendarEvents,
+    dateClick: handleDateClick,
+    eventClick: (arg: { event: { startStr: string } }) => setSelectedDate(arg.event.startStr.slice(0, 10)),
+    datesSet: handleDatesSet,
+    dayCellDidMount: decorateDayCell,
+    height: "auto",
+    headerToolbar: {
+      left: "today prev,next",
+      center: "title",
+      right: "dayGridMonth",
+    },
+    dayMaxEventRows: 3,
   };
 
   return (
@@ -283,26 +420,72 @@ export default function HomePage() {
       <section className="calendar-frame-wrap">
         <div className="event-list-panel">
           <div className="panel-head">
-            <h2>Upcoming events</h2>
-            <button className="chev-btn" aria-label="Expand upcoming events">⌄</button>
-            <button className="subscribe-btn">Subscribe</button>
+            <div>
+              <h2>{selectedDayEvents.length > 0 ? "Selected day events" : "Upcoming events"}</h2>
+              <p className="panel-subtitle">
+                {selectedDayEvents.length > 0 ? getDateHeading(selectedDate) : `From ${getDateHeading(selectedDate)} in ${resolvedCityName}`}
+              </p>
+            </div>
+            <label className="city-filter">
+              <span>City</span>
+              <select value={selectedCityId} onChange={(event) => handleCityChange(event.target.value)}>
+                {CITIES.map((city) => (
+                  <option key={city.id} value={city.id}>{city.label}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
+          {selectedDay ? (
+            <div className="selected-day-panel">
+              <div>
+                <p className="selected-day-kicker">Selected Panchang</p>
+                <h3>{getDateHeading(selectedDate)}</h3>
+              </div>
+              <div className="selected-day-grid">
+                <div>
+                  <span>Tithi</span>
+                  <strong>{selectedDay.tithi}</strong>
+                </div>
+                <div>
+                  <span>Nakshatra</span>
+                  <strong>{selectedDay.nakshatra}</strong>
+                </div>
+                <div>
+                  <span>Sunrise</span>
+                  <strong>{selectedDay.sunrise.slice(11, 16)}</strong>
+                </div>
+                <div>
+                  <span>Sunset</span>
+                  <strong>{selectedDay.sunset.slice(11, 16)}</strong>
+                </div>
+              </div>
+              {selectedDay.festivals.length > 0 ? (
+                <div className="selected-day-tags">
+                  {selectedDay.festivals.map((festival) => (
+                    <span key={festival}>{festival}</span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="event-list-scroll">
-            {contentLoading && upcoming.length === 0 ? (
+            {contentLoading && visibleUpcoming.length === 0 ? (
               <p className="panel-empty">Loading upcoming events...</p>
             ) : null}
 
-            {!contentLoading && upcoming.length === 0 ? (
-              <p className="panel-empty">No upcoming events available right now.</p>
+            {!contentLoading && visibleUpcoming.length === 0 ? (
+              <p className="panel-empty">No events are scheduled for this city and date selection yet.</p>
             ) : null}
 
-            {upcoming.map((item) => (
+            {visibleUpcoming.map((item) => (
               <article className="event-row" key={item.id}>
                 <span className="event-dot" aria-hidden="true" />
                 <div>
                   <h3>{item.title}</h3>
                   <p>{formatEventDetail(item)}</p>
+                  <span className="event-chip">{item.event_category}</span>
                 </div>
               </article>
             ))}
@@ -310,48 +493,26 @@ export default function HomePage() {
 
           <div className="panel-timezone">
             <span className="tz-icon" aria-hidden="true">◔</span>
-            <span>Time shown in</span>
-            <strong>(GMT+02:00) Europe, Berlin</strong>
+            <span>Events shown in</span>
+            <strong>{resolvedTimezone} • {resolvedCityName}</strong>
           </div>
-          <div className="panel-powered">Powered by AddEvent</div>
         </div>
 
         <div className="month-panel">
           <h1>Dharmic Days and Hindu Holidays</h1>
 
-          <div className="month-toolbar">
-            <div className="toolbar-left">
-              <button>Today</button>
-              <button aria-label="Previous month">‹</button>
-              <button aria-label="Next month">›</button>
-              <button>September 2026 ⌄</button>
-            </div>
-            <div className="toolbar-right">
-              <button aria-label="Search">⌕</button>
-              <button aria-label="Print">⎙</button>
-              <button>Month ⌄</button>
-              <button className="follow-btn">Follow Calendar</button>
-            </div>
+          <div className="month-toolbar-shell">
+            <span className="month-toolbar-label">Calendar month</span>
+            <strong>{getMonthLabel(monthKey)}</strong>
           </div>
 
-          <div className="calendar-grid">
-            {calendarCells.map((cell, idx) => (
-              <div key={`${cell}-${idx}`} className={`cell ${idx < 7 ? "cell-head" : ""}`}>
-                {cell}
-              </div>
-            ))}
-
-            {calendarBars.map((bar) => (
-              <div key={bar.key} className="bar" style={{ gridColumn: bar.gridColumn, gridRow: bar.gridRow }}>
-                {bar.name}
-              </div>
-            ))}
+          <div className="calendar-shell">
+            <FullCalendar {...(calendarProps as Record<string, unknown>)} />
           </div>
 
           <div className="month-footer">
-            <span>Events shown in time zone:</span>
-            <button>Europe, Berlin (GMT+02:00) ⌄</button>
-            <strong>Powered by AddEvent</strong>
+            <span>Panchang and events update with the selected month, city, and saved location.</span>
+            <strong>{savedCoords ? `Location-assisted view • ${resolvedCityName}` : `City view • ${resolvedCityName}`}</strong>
           </div>
         </div>
       </section>
@@ -379,7 +540,7 @@ export default function HomePage() {
           <header className="guide-hero">
             <div className="guide-grid">
               <div>
-                <p className="guide-eyebrow">2026 dharmic days &amp; hindu holidays calendar</p>
+                <p className="guide-eyebrow">{selectedYear} dharmic days &amp; hindu holidays calendar</p>
                 <h1 className="guide-title">A living Panchang and community calendar for Hindu heritage, rituals, and everyday culture.</h1>
                 <div className="guide-cta-row">
                   <a href="#calendar" className="guide-btn guide-btn-primary">View Calendar</a>

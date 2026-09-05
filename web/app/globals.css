@@ -639,6 +639,12 @@ body {
   color: #232f46;
 }
 
+.panel-subtitle {
+  margin: 0.2rem 0 0;
+  color: #71809b;
+  font-size: 0.86rem;
+}
+
 .chev-btn {
   border: 0;
   background: transparent;
@@ -656,6 +662,88 @@ body {
   font-weight: 600;
   padding: 0.56rem 1.03rem;
   cursor: pointer;
+}
+
+.city-filter {
+  margin-left: auto;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #60708d;
+}
+
+.city-filter select {
+  min-width: 170px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #dbe4f2;
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: #2c3952;
+  font-weight: 600;
+}
+
+.selected-day-panel {
+  border-bottom: 1px solid #edf1f7;
+  padding: 0.95rem 1rem;
+  background: linear-gradient(180deg, #fbfcff 0%, #f4f7fc 100%);
+}
+
+.selected-day-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7c88a3;
+}
+
+.selected-day-panel h3 {
+  margin: 0.3rem 0 0;
+  font-size: 1.1rem;
+  color: #223249;
+}
+
+.selected-day-grid {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.selected-day-grid div {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.selected-day-grid span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7b879f;
+}
+
+.selected-day-grid strong {
+  color: #24314a;
+  font-size: 0.96rem;
+}
+
+.selected-day-tags {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.selected-day-tags span {
+  border-radius: 999px;
+  background: rgba(28, 104, 215, 0.1);
+  color: #1c68d7;
+  padding: 0.32rem 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .event-list-scroll {
@@ -690,6 +778,18 @@ body {
   margin: 0.17rem 0 0;
   color: #57657d;
   font-size: 0.93rem;
+}
+
+.event-chip {
+  display: inline-flex;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  padding: 0.24rem 0.62rem;
+  background: rgba(28, 104, 215, 0.08);
+  color: #1c68d7;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
 }
 
 .panel-empty {
@@ -743,6 +843,121 @@ body {
   gap: 0.7rem;
   flex-wrap: wrap;
   margin-bottom: 0.5rem;
+}
+
+.month-toolbar-shell {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+  color: #2d3b53;
+}
+
+.month-toolbar-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7a8598;
+}
+
+.calendar-shell {
+  border: 1px solid #edf1f7;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.calendar-shell .fc {
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.calendar-shell .fc-toolbar {
+  padding: 0.9rem 1rem 0;
+  margin-bottom: 0.8rem;
+}
+
+.calendar-shell .fc-toolbar-title {
+  font-family: var(--font-display), serif;
+  font-size: 1.3rem;
+  color: #223249;
+}
+
+.calendar-shell .fc-button {
+  border: 1px solid #dce5f2 !important;
+  background: #f7f9fc !important;
+  color: #30405b !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+}
+
+.calendar-shell .fc-button-primary:not(:disabled).fc-button-active,
+.calendar-shell .fc-button-primary:not(:disabled):active,
+.calendar-shell .fc-button:hover {
+  background: #e9f0ff !important;
+  border-color: #bfd0f4 !important;
+}
+
+.calendar-shell .fc-daygrid-day-number {
+  color: #31425f;
+  font-weight: 700;
+  padding: 0.45rem 0.55rem 0 0;
+}
+
+.calendar-shell .fc-col-header-cell-cushion {
+  color: #6f7d95;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.calendar-shell .fc-theme-standard td,
+.calendar-shell .fc-theme-standard th,
+.calendar-shell .fc-scrollgrid {
+  border-color: #edf1f7;
+}
+
+.calendar-shell .fc-daygrid-day-frame {
+  min-height: 120px;
+  padding-bottom: 0.5rem;
+}
+
+.calendar-shell .fc-day-today {
+  background: rgba(28, 104, 215, 0.05) !important;
+}
+
+.rangroots-day-meta {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0 0.45rem 0.45rem;
+}
+
+.rangroots-day-tithi {
+  color: #5d6880;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.rangroots-day-count {
+  color: #a0592f;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.calendar-shell .fc-event {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.12rem 0.3rem;
+  font-size: 0.74rem;
+}
+
+.calendar-shell .rangroots-highlight {
+  background: #1c68d7;
+}
+
+.calendar-shell .rangroots-community-event {
+  background: #a95a2b;
 }
 
 .toolbar-left,
@@ -841,15 +1056,24 @@ body {
     padding: 1rem;
   }
 
+  .city-filter {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .city-filter select {
+    width: 100%;
+  }
+
   .month-panel h1 {
     font-size: 1.7rem;
   }
 
-  .calendar-grid {
-    min-width: 760px;
+  .calendar-shell {
+    overflow-x: auto;
   }
 
-  .month-panel {
-    overflow-x: auto;
+  .calendar-shell .fc {
+    min-width: 760px;
   }
 }

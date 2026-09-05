@@ -9,6 +9,7 @@ const EVENTS_API_BASE = process.env.NEXT_PUBLIC_EVENTS_API_BASE ?? "http://local
 export interface DailyPanchang {
   date: string;
   city_id: string;
+  location_context?: LocationContext;
   tithi: string;
   paksha: string;
   nakshatra: string;
@@ -40,10 +41,30 @@ export interface CalendarHighlight {
   category: "festival" | "deity" | "observance" | "other";
 }
 
+export interface LocationContext {
+  requested_latitude?: number;
+  requested_longitude?: number;
+  resolved_city_id: string;
+  resolved_city_name: string;
+  timezone: string;
+  distance_km: number;
+}
+
+export interface MonthlyPanchangResponse {
+  month: string;
+  city_id: string;
+  location_context?: LocationContext;
+  days: DailyPanchang[];
+}
+
 export interface HomepageContentResponse {
+  monthData: MonthlyPanchangResponse | null;
   festivals: FestivalEntry[];
   highlights: CalendarHighlight[];
   events: EventSummary[];
+  resolvedCityId?: string;
+  resolvedCityName?: string;
+  timezone?: string;
   errors: string[];
 }
 
@@ -66,6 +87,10 @@ interface CalendarHighlightsApiResponse {
   city_id: string;
   highlights: CalendarHighlight[];
 }
+
+interface MonthlyPanchangApiResponse extends MonthlyPanchangResponse {}
+
+interface LocationContextApiResponse extends LocationContext {}
 
 export interface EventSummary {
   id: string;
@@ -111,6 +136,28 @@ export async function getCalendarHighlights(month: string, cityId: string): Prom
   if (!res.ok) throw new Error("Failed to fetch calendar highlights");
   const payload = (await res.json()) as CalendarHighlightsApiResponse;
   return payload.highlights;
+}
+
+export async function getMonthlyPanchang(month: string, cityId: string): Promise<MonthlyPanchangResponse> {
+  const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/monthly?month=${month}&city_id=${cityId}`);
+  if (!res.ok) throw new Error("Failed to fetch monthly panchang");
+  return (await res.json()) as MonthlyPanchangApiResponse;
+}
+
+export async function getMonthlyPanchangByLocation(month: string, lat: number, lng: number, cityId?: string): Promise<MonthlyPanchangResponse> {
+  const params = new URLSearchParams({ month, lat: String(lat), lng: String(lng) });
+  if (cityId) {
+    params.set("city_id", cityId);
+  }
+  const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/monthly?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch location-aware monthly panchang");
+  return (await res.json()) as MonthlyPanchangApiResponse;
+}
+
+export async function resolveLocationContext(lat: number, lng: number): Promise<LocationContext> {
+  const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/location-context?lat=${lat}&lng=${lng}`);
+  if (!res.ok) throw new Error("Failed to resolve location context");
+  return (await res.json()) as LocationContextApiResponse;
 }
 
 export async function getHomepageContent(params?: HomepageContentRequest): Promise<HomepageContentResponse> {
