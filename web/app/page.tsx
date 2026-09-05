@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
-  getCalendarHighlights,
-  getFestivals,
-  listEvents,
+  getHomepageContent,
+  type HomepageContentRequest,
   type CalendarHighlight,
   type EventSummary,
   type FestivalEntry,
 } from "@/lib/api";
+import { formatLocationStatus, readPreferences, updatePreferences } from "@/lib/preferences";
 import rangrootsLogo from "../res/rangroots.png";
 
 function BrandEmblem() {
@@ -180,40 +180,46 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
+    const preferences = readPreferences();
+    const homepageRequest: HomepageContentRequest = {
+      month: LANDING_MONTH,
+      year: LANDING_YEAR,
+      cityId: preferences.preferredCityId,
+    };
 
-    Promise.allSettled([
-      getFestivals(LANDING_YEAR, LANDING_CITY_ID),
-      getCalendarHighlights(LANDING_MONTH, LANDING_CITY_ID),
-      listEvents({ from: `${LANDING_MONTH}-01` }),
-    ]).then(([festivalsResult, highlightsResult, eventsResult]) => {
-      if (cancelled) {
-        return;
-      }
+    if (preferences.savedCoords) {
+      homepageRequest.lat = preferences.savedCoords.latitude;
+      homepageRequest.lng = preferences.savedCoords.longitude;
+    }
 
-      if (festivalsResult.status === "fulfilled") {
-        setGuideGroups(buildGuideGroups(festivalsResult.value));
-      }
+    getHomepageContent(homepageRequest)
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
 
-      if (highlightsResult.status === "fulfilled") {
-        setCalendarHighlights(highlightsResult.value);
-      }
+        setGuideGroups(buildGuideGroups(payload.festivals));
+        setCalendarHighlights(payload.highlights);
+        setUpcoming(payload.events.slice(0, 5));
 
-      if (eventsResult.status === "fulfilled") {
-        setUpcoming(eventsResult.value.slice(0, 5));
-      }
+        if (payload.errors.length > 0) {
+          setContentError("Some live calendar data is temporarily unavailable.");
+        } else {
+          setContentError(null);
+        }
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
 
-      if (
-        festivalsResult.status === "rejected" ||
-        highlightsResult.status === "rejected" ||
-        eventsResult.status === "rejected"
-      ) {
         setContentError("Live calendar data is unavailable until the backend services are running.");
-      } else {
-        setContentError(null);
-      }
-
-      setContentLoading(false);
-    });
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setContentLoading(false);
+        }
+      });
 
     return () => {
       cancelled = true;
@@ -221,17 +227,17 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    setLocationStatus(formatLocationStatus(readPreferences()));
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
 
     if ("geolocation" in navigator && navigator.permissions) {
       navigator.permissions.query({ name: "geolocation" as PermissionName }).then((result) => {
-        setLocationStatus(
-          result.state === "granted"
-            ? "Location enabled for local Panchang calculations"
-            : "Location access is off. Enable it to personalize your local calendar."
-        );
+        const permission = result.state === "granted" ? "granted" : result.state === "denied" ? "denied" : "unknown";
+        const next = updatePreferences({ locationPermission: permission });
+        setLocationStatus(formatLocationStatus(next));
       });
     }
   }, []);
@@ -245,10 +251,19 @@ export default function HomePage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setLocationStatus(`Location enabled: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        const next = updatePreferences({
+          locationPermission: "granted",
+          savedCoords: {
+            latitude,
+            longitude,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+        setLocationStatus(formatLocationStatus(next));
       },
       () => {
-        setLocationStatus("Location denied. You can re-enable via browser settings.");
+        const next = updatePreferences({ locationPermission: "denied", savedCoords: undefined });
+        setLocationStatus(formatLocationStatus(next));
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
@@ -258,7 +273,11 @@ export default function HomePage() {
     <main className="calendar-frame-page">
       <div className="location-banner">
         <span>{locationStatus}</span>
-        <button onClick={enableLocation}>Use my location</button>
+        <div className="location-banner-actions">
+          <a href="/privacy-policy">Privacy</a>
+          <a href="/settings">Settings</a>
+          <button onClick={enableLocation}>Use my location</button>
+        </div>
       </div>
 
       <section className="calendar-frame-wrap">
