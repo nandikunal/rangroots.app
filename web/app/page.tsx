@@ -1,10 +1,8 @@
 "use client";
 
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
+import { DayPicker } from "react-day-picker";
 import {
   getHomepageContent,
   type HomepageContentRequest,
@@ -17,8 +15,6 @@ import {
 } from "@/lib/api";
 import { formatLocationStatus, readPreferences, updatePreferences } from "@/lib/preferences";
 import rangrootsLogo from "../res/rangroots.png";
-
-const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
 
 function BrandEmblem() {
   return (
@@ -39,6 +35,16 @@ type GuideGroup = {
   title: string;
   subtitle: string;
   items: FestivalEntry[];
+};
+
+type FallbackContent = {
+  monthData: MonthlyPanchangResponse;
+  festivals: FestivalEntry[];
+  highlights: CalendarHighlight[];
+  events: EventSummary[];
+  resolvedCityId: string;
+  resolvedCityName: string;
+  timezone: string;
 };
 
 const GUIDE_GROUP_META: Record<FestivalEntry["category"], Omit<GuideGroup, "items" | "key">> = {
@@ -65,8 +71,20 @@ function parseDateOnly(dateString: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function parseDateLocal(dateString: string): Date {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function toDateOnlyLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toDateOnlyLocal(new Date());
 }
 
 function startOfMonth(date: Date): Date {
@@ -81,10 +99,18 @@ function monthContainsDate(monthKey: string, dateString: string): boolean {
   return dateString.startsWith(`${monthKey}-`);
 }
 
-function addDays(dateString: string, days: number): string {
-  const date = parseDateOnly(dateString);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+function getMonthInfo(monthKey: string): { year: number; month: number; daysInMonth: number } {
+  const [year, month] = monthKey.split("-").map(Number);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return { year, month, daysInMonth };
+}
+
+function toIsoDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function clampDay(day: number, daysInMonth: number): number {
+  return Math.min(Math.max(day, 1), daysInMonth);
 }
 
 function toEventLocalDate(value: string): string {
@@ -157,6 +183,163 @@ function formatEventDetail(item: EventSummary): string {
   return [dateLabel, item.venue_name].filter(Boolean).join(" • ");
 }
 
+function formatClock(value?: string): string {
+  if (!value || value.length < 16) {
+    return "--:--";
+  }
+  return value.slice(11, 16);
+}
+
+function buildFallbackContent(monthKey: string, cityId: string): FallbackContent {
+  const cityName = CITIES.find((city) => city.id === cityId)?.label ?? "Berlin";
+  const timezone = "Europe/Berlin";
+  const { year, month, daysInMonth } = getMonthInfo(monthKey);
+
+  const primaryFestivalDate = toIsoDate(year, month, clampDay(8, daysInMonth));
+  const secondaryFestivalDate = toIsoDate(year, month, clampDay(15, daysInMonth));
+  const tertiaryFestivalDate = toIsoDate(year, month, clampDay(23, daysInMonth));
+
+  const festivals: FestivalEntry[] = [
+    {
+      id: `${monthKey}-fallback-festival-1`,
+      name: "Community Festival Gathering",
+      date: primaryFestivalDate,
+      category: "festival",
+      description: "A curated placeholder while live festival feeds reconnect.",
+    },
+    {
+      id: `${monthKey}-fallback-deity-1`,
+      name: "Deity Devotion Day",
+      date: secondaryFestivalDate,
+      category: "deity",
+      description: "Temples and homes observe prayers and devotional offerings.",
+    },
+    {
+      id: `${monthKey}-fallback-observance-1`,
+      name: "Monthly Reflection Observance",
+      date: tertiaryFestivalDate,
+      category: "observance",
+      description: "A day set aside for study, seva, and mindful reflection.",
+    },
+    {
+      id: `${monthKey}-fallback-other-1`,
+      name: "Dharma Community Heritage Meetup",
+      date: toIsoDate(year, month, clampDay(27, daysInMonth)),
+      category: "other",
+      description: "Shared heritage activities across Dharma traditions.",
+    },
+  ];
+
+  const highlights: CalendarHighlight[] = [
+    {
+      id: `${monthKey}-fallback-highlight-1`,
+      name: "Community Festival Week",
+      start_date: primaryFestivalDate,
+      end_date: toIsoDate(year, month, clampDay(10, daysInMonth)),
+      category: "festival",
+    },
+    {
+      id: `${monthKey}-fallback-highlight-2`,
+      name: "Dharma Heritage Circle",
+      start_date: tertiaryFestivalDate,
+      end_date: tertiaryFestivalDate,
+      category: "other",
+    },
+  ];
+
+  const events: EventSummary[] = [
+    {
+      id: `${monthKey}-fallback-event-1`,
+      city_id: cityId,
+      title: "Panchang Study Circle",
+      description: "Weekly community session on Panchang basics and observances.",
+      start_datetime: `${toIsoDate(year, month, clampDay(9, daysInMonth))}T18:30:00+02:00`,
+      end_datetime: `${toIsoDate(year, month, clampDay(9, daysInMonth))}T20:00:00+02:00`,
+      venue_name: `${cityName} Cultural Hall`,
+      event_category: "community",
+      is_free: true,
+    },
+    {
+      id: `${monthKey}-fallback-event-2`,
+      city_id: cityId,
+      title: "Family Heritage Workshop",
+      description: "Hands-on session for rituals, songs, and storytelling.",
+      start_datetime: `${toIsoDate(year, month, clampDay(16, daysInMonth))}T11:00:00+02:00`,
+      end_datetime: `${toIsoDate(year, month, clampDay(16, daysInMonth))}T13:00:00+02:00`,
+      venue_name: `${cityName} Community Center`,
+      event_category: "education",
+      is_free: false,
+    },
+    {
+      id: `${monthKey}-fallback-event-3`,
+      city_id: cityId,
+      title: "Temple Volunteer Day",
+      description: "Neighborhood seva and temple support program.",
+      start_datetime: `${toIsoDate(year, month, clampDay(24, daysInMonth))}T09:30:00+02:00`,
+      end_datetime: `${toIsoDate(year, month, clampDay(24, daysInMonth))}T12:00:00+02:00`,
+      venue_name: `${cityName} Mandir`,
+      event_category: "seva",
+      is_free: true,
+    },
+  ];
+
+  const festivalByDate = festivals.reduce<Record<string, string[]>>((acc, festival) => {
+    if (!acc[festival.date]) {
+      acc[festival.date] = [];
+    }
+    acc[festival.date].push(festival.name);
+    return acc;
+  }, {});
+
+  const days: DailyPanchang[] = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const date = toIsoDate(year, month, day);
+    return {
+      date,
+      city_id: cityId,
+      location_context: {
+        requested_latitude: undefined,
+        requested_longitude: undefined,
+        resolved_city_id: cityId,
+        resolved_city_name: cityName,
+        timezone,
+        distance_km: 0,
+      },
+      tithi: "Panchang guidance available soon",
+      paksha: "Community fallback",
+      nakshatra: "Pending sync",
+      yoga: "Pending sync",
+      karana: "Pending sync",
+      sunrise: `${date}T06:00:00+02:00`,
+      sunset: `${date}T18:00:00+02:00`,
+      festivals: festivalByDate[date] ?? [],
+      muhurtas: {},
+    };
+  });
+
+  return {
+    monthData: {
+      month: monthKey,
+      city_id: cityId,
+      location_context: {
+        requested_latitude: undefined,
+        requested_longitude: undefined,
+        resolved_city_id: cityId,
+        resolved_city_name: cityName,
+        timezone,
+        distance_km: 0,
+      },
+      days,
+    },
+    festivals,
+    highlights,
+    events,
+    resolvedCityId: cityId,
+    resolvedCityName: cityName,
+    timezone,
+  };
+}
+
 function buildGuideGroups(festivals: FestivalEntry[]): GuideGroup[] {
   return (["festival", "deity", "observance", "other"] as const).map((category) => ({
     key: category,
@@ -167,46 +350,42 @@ function buildGuideGroups(festivals: FestivalEntry[]): GuideGroup[] {
   }));
 }
 
-function buildCalendarEvents(highlights: CalendarHighlight[], events: EventSummary[]) {
-  const highlightEvents = highlights.map((highlight) => ({
-    id: `highlight-${highlight.id}`,
-    title: highlight.name,
-    start: highlight.start_date,
-    end: addDays(highlight.end_date, 1),
-    allDay: true,
-    classNames: ["rangroots-highlight", `rangroots-highlight-${highlight.category}`],
-  }));
+function expandDateRange(startDate: string, endDate: string): string[] {
+  const result: string[] = [];
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+  const cursor = new Date(start);
 
-  const communityEvents = events.map((event) => ({
-    id: event.id,
-    title: event.title,
-    start: event.start_datetime,
-    end: event.end_datetime,
-    allDay: false,
-    classNames: ["rangroots-community-event"],
-  }));
+  while (cursor <= end) {
+    result.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
 
-  return [...highlightEvents, ...communityEvents];
+  return result;
 }
 
 export default function HomePage() {
+  const initialMonth = startOfMonth(new Date());
+  const initialMonthKey = toMonthKey(initialMonth);
+  const initialFallback = buildFallbackContent(initialMonthKey, LANDING_CITY_ID);
+
   const [locationStatus, setLocationStatus] = useState("Waiting for location consent");
   const [selectedCityId, setSelectedCityId] = useState(LANDING_CITY_ID);
-  const [selectedMonth, setSelectedMonth] = useState(() => startOfMonth(new Date()));
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [savedCoords, setSavedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [monthData, setMonthData] = useState<MonthlyPanchangResponse | null>(null);
-  const [monthEvents, setMonthEvents] = useState<EventSummary[]>([]);
-  const [guideGroups, setGuideGroups] = useState<GuideGroup[]>([]);
-  const [calendarHighlights, setCalendarHighlights] = useState<CalendarHighlight[]>([]);
-  const [resolvedCityName, setResolvedCityName] = useState("Berlin");
-  const [resolvedTimezone, setResolvedTimezone] = useState("Europe/Berlin");
+  const [monthData, setMonthData] = useState<MonthlyPanchangResponse | null>(initialFallback.monthData);
+  const [monthEvents, setMonthEvents] = useState<EventSummary[]>(initialFallback.events);
+  const [guideGroups, setGuideGroups] = useState<GuideGroup[]>(buildGuideGroups(initialFallback.festivals));
+  const [calendarHighlights, setCalendarHighlights] = useState<CalendarHighlight[]>(initialFallback.highlights);
+  const [resolvedCityName, setResolvedCityName] = useState(initialFallback.resolvedCityName);
+  const [resolvedTimezone, setResolvedTimezone] = useState(initialFallback.timezone);
   const [contentLoading, setContentLoading] = useState(true);
   const [contentError, setContentError] = useState<string | null>(null);
 
   const monthKey = useMemo(() => toMonthKey(selectedMonth), [selectedMonth]);
   const selectedYear = useMemo(() => selectedMonth.getFullYear(), [selectedMonth]);
-  const calendarEvents = useMemo(() => buildCalendarEvents(calendarHighlights, monthEvents), [calendarHighlights, monthEvents]);
+  const selectedCalendarDate = useMemo(() => parseDateLocal(selectedDate), [selectedDate]);
   const panchangByDate = useMemo(() => {
     const entries = new Map<string, DailyPanchang>();
     monthData?.days.forEach((day) => entries.set(day.date, day));
@@ -223,8 +402,32 @@ export default function HomePage() {
     );
     return (selectedDayEvents.length > 0 ? selectedDayEvents : upcomingFromSelectedDay).slice(0, 6);
   }, [monthEvents, selectedDate, selectedDayEvents]);
+  const highlightDays = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          calendarHighlights.flatMap((highlight) => expandDateRange(highlight.start_date, highlight.end_date))
+        )
+      ).map((date) => parseDateLocal(date)),
+    [calendarHighlights]
+  );
+  const eventDays = useMemo(
+    () => Array.from(new Set(monthEvents.map((event) => toEventLocalDate(event.start_datetime)))).map((date) => parseDateLocal(date)),
+    [monthEvents]
+  );
+  const festivalDays = useMemo(
+    () =>
+      (monthData?.days ?? [])
+        .filter((day) => day.festivals.length > 0)
+        .map((day) => parseDateLocal(day.date)),
+    [monthData]
+  );
 
   useEffect(() => {
+    const now = new Date();
+    setSelectedMonth(startOfMonth(now));
+    setSelectedDate(toDateOnlyLocal(now));
+
     const preferences = readPreferences();
     setSelectedCityId(preferences.preferredCityId);
     if (preferences.savedCoords) {
@@ -253,31 +456,55 @@ export default function HomePage() {
 
     setContentLoading(true);
 
+    const applyFallback = (message: string) => {
+      const fallback = buildFallbackContent(monthKey, selectedCityId);
+      setMonthData(fallback.monthData);
+      setGuideGroups(buildGuideGroups(fallback.festivals));
+      setCalendarHighlights(fallback.highlights);
+      setMonthEvents(fallback.events);
+      setResolvedCityName(fallback.resolvedCityName);
+      setResolvedTimezone(fallback.timezone);
+      setContentError(message);
+    };
+
     getHomepageContent(homepageRequest)
       .then((payload) => {
         if (cancelled) {
           return;
         }
 
-        setMonthData(payload.monthData);
-        setGuideGroups(buildGuideGroups(payload.festivals));
-        setCalendarHighlights(payload.highlights);
-        setMonthEvents(payload.events);
-        setResolvedCityName(payload.resolvedCityName ?? CITIES.find((city) => city.id === payload.resolvedCityId)?.label ?? "Berlin");
-        setResolvedTimezone(payload.timezone ?? "Europe/Berlin");
+        const hasLiveData = Boolean(
+          payload.monthData || payload.festivals.length > 0 || payload.highlights.length > 0 || payload.events.length > 0
+        );
 
-        if (payload.errors.length > 0) {
-          setContentError("Some live calendar data is temporarily unavailable.");
-        } else {
-          setContentError(null);
+        if (!hasLiveData) {
+          applyFallback("Live calendar services are unavailable right now. Showing curated fallback information.");
+          return;
         }
+
+        const fallback = buildFallbackContent(monthKey, selectedCityId);
+
+        setMonthData(payload.monthData ?? fallback.monthData);
+        setGuideGroups(buildGuideGroups(payload.festivals.length > 0 ? payload.festivals : fallback.festivals));
+        setCalendarHighlights(payload.highlights.length > 0 ? payload.highlights : fallback.highlights);
+        setMonthEvents(payload.events.length > 0 ? payload.events : fallback.events);
+        setResolvedCityName(
+          payload.resolvedCityName ?? CITIES.find((city) => city.id === payload.resolvedCityId)?.label ?? fallback.resolvedCityName
+        );
+        setResolvedTimezone(payload.timezone ?? fallback.timezone);
+
+        setContentError(
+          payload.errors.length > 0
+            ? "Some live calendar data is temporarily unavailable. Showing a blended live and curated view."
+            : null
+        );
       })
       .catch(() => {
         if (cancelled) {
           return;
         }
 
-        setContentError("Live calendar data is unavailable until the backend services are running.");
+        applyFallback("Live calendar services are unavailable right now. Showing curated fallback information.");
       })
       .finally(() => {
         if (!cancelled) {
@@ -298,11 +525,14 @@ export default function HomePage() {
     }
 
     if ("geolocation" in navigator && navigator.permissions) {
-      navigator.permissions.query({ name: "geolocation" as PermissionName }).then((result) => {
-        const permission = result.state === "granted" ? "granted" : result.state === "denied" ? "denied" : "unknown";
-        const next = updatePreferences({ locationPermission: permission });
-        setLocationStatus(formatLocationStatus(next));
-      });
+      navigator.permissions
+        .query({ name: "geolocation" as PermissionName })
+        .then((result) => {
+          const permission = result.state === "granted" ? "granted" : result.state === "denied" ? "denied" : "unknown";
+          const next = updatePreferences({ locationPermission: permission });
+          setLocationStatus(formatLocationStatus(next));
+        })
+        .catch(() => undefined);
     }
   }, []);
 
@@ -342,180 +572,20 @@ export default function HomePage() {
     setLocationStatus(formatLocationStatus(next));
   };
 
-  const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
-    setSelectedMonth(startOfMonth(arg.view.currentStart));
+  const handleMonthChange = (month: Date) => {
+    setSelectedMonth(startOfMonth(month));
   };
 
-  const handleDateClick = (arg: { dateStr: string }) => {
-    setSelectedDate(arg.dateStr);
-  };
-
-  const decorateDayCell = (arg: { date: Date; el: HTMLElement }) => {
-    const dayInfo = panchangByDate.get(arg.date.toISOString().slice(0, 10));
-    const frame = arg.el.querySelector(".fc-daygrid-day-frame");
-
-    if (!frame) {
+  const handleDaySelect = (date: Date | undefined) => {
+    if (!date) {
       return;
     }
 
-    const existing = frame.querySelector(".rangroots-day-meta");
-    if (existing) {
-      existing.remove();
-    }
-
-    if (!dayInfo) {
-      return;
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "rangroots-day-meta";
-
-    const tithi = document.createElement("span");
-    tithi.className = "rangroots-day-tithi";
-    tithi.textContent = shortenTithi(dayInfo.tithi);
-    meta.appendChild(tithi);
-
-    if (dayInfo.festivals.length > 0) {
-      const count = document.createElement("span");
-      count.className = "rangroots-day-count";
-      count.textContent = `${dayInfo.festivals.length} observance${dayInfo.festivals.length > 1 ? "s" : ""}`;
-      meta.appendChild(count);
-    }
-
-    frame.appendChild(meta);
-  };
-
-  const calendarProps: Record<string, unknown> = {
-    plugins: [dayGridPlugin, interactionPlugin],
-    initialView: "dayGridMonth",
-    initialDate: selectedDate,
-    fixedWeekCount: false,
-    selectable: true,
-    weekends: true,
-    events: calendarEvents,
-    dateClick: handleDateClick,
-    eventClick: (arg: { event: { startStr: string } }) => setSelectedDate(arg.event.startStr.slice(0, 10)),
-    datesSet: handleDatesSet,
-    dayCellDidMount: decorateDayCell,
-    height: "auto",
-    headerToolbar: {
-      left: "today prev,next",
-      center: "title",
-      right: "dayGridMonth",
-    },
-    dayMaxEventRows: 3,
+    setSelectedDate(toDateOnlyLocal(date));
   };
 
   return (
     <main className="calendar-frame-page">
-      <div className="location-banner">
-        <span>{locationStatus}</span>
-        <div className="location-banner-actions">
-          <a href="/privacy-policy">Privacy</a>
-          <a href="/settings">Settings</a>
-          <button onClick={enableLocation}>Use my location</button>
-        </div>
-      </div>
-
-      <section className="calendar-frame-wrap">
-        <div className="event-list-panel">
-          <div className="panel-head">
-            <div>
-              <h2>{selectedDayEvents.length > 0 ? "Selected day events" : "Upcoming events"}</h2>
-              <p className="panel-subtitle">
-                {selectedDayEvents.length > 0 ? getDateHeading(selectedDate) : `From ${getDateHeading(selectedDate)} in ${resolvedCityName}`}
-              </p>
-            </div>
-            <label className="city-filter">
-              <span>City</span>
-              <select value={selectedCityId} onChange={(event) => handleCityChange(event.target.value)}>
-                {CITIES.map((city) => (
-                  <option key={city.id} value={city.id}>{city.label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {selectedDay ? (
-            <div className="selected-day-panel">
-              <div>
-                <p className="selected-day-kicker">Selected Panchang</p>
-                <h3>{getDateHeading(selectedDate)}</h3>
-              </div>
-              <div className="selected-day-grid">
-                <div>
-                  <span>Tithi</span>
-                  <strong>{selectedDay.tithi}</strong>
-                </div>
-                <div>
-                  <span>Nakshatra</span>
-                  <strong>{selectedDay.nakshatra}</strong>
-                </div>
-                <div>
-                  <span>Sunrise</span>
-                  <strong>{selectedDay.sunrise.slice(11, 16)}</strong>
-                </div>
-                <div>
-                  <span>Sunset</span>
-                  <strong>{selectedDay.sunset.slice(11, 16)}</strong>
-                </div>
-              </div>
-              {selectedDay.festivals.length > 0 ? (
-                <div className="selected-day-tags">
-                  {selectedDay.festivals.map((festival) => (
-                    <span key={festival}>{festival}</span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="event-list-scroll">
-            {contentLoading && visibleUpcoming.length === 0 ? (
-              <p className="panel-empty">Loading upcoming events...</p>
-            ) : null}
-
-            {!contentLoading && visibleUpcoming.length === 0 ? (
-              <p className="panel-empty">No events are scheduled for this city and date selection yet.</p>
-            ) : null}
-
-            {visibleUpcoming.map((item) => (
-              <article className="event-row" key={item.id}>
-                <span className="event-dot" aria-hidden="true" />
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{formatEventDetail(item)}</p>
-                  <span className="event-chip">{item.event_category}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="panel-timezone">
-            <span className="tz-icon" aria-hidden="true">◔</span>
-            <span>Events shown in</span>
-            <strong>{resolvedTimezone} • {resolvedCityName}</strong>
-          </div>
-        </div>
-
-        <div className="month-panel">
-          <h1>Dharmic Days and Hindu Holidays</h1>
-
-          <div className="month-toolbar-shell">
-            <span className="month-toolbar-label">Calendar month</span>
-            <strong>{getMonthLabel(monthKey)}</strong>
-          </div>
-
-          <div className="calendar-shell">
-            <FullCalendar {...(calendarProps as Record<string, unknown>)} />
-          </div>
-
-          <div className="month-footer">
-            <span>Panchang and events update with the selected month, city, and saved location.</span>
-            <strong>{savedCoords ? `Location-assisted view • ${resolvedCityName}` : `City view • ${resolvedCityName}`}</strong>
-          </div>
-        </div>
-      </section>
 
       <div className="guide-page">
         <div className="guide-page-inner">
@@ -541,7 +611,7 @@ export default function HomePage() {
             <div className="guide-grid">
               <div>
                 <p className="guide-eyebrow">{selectedYear} dharmic days &amp; hindu holidays calendar</p>
-                <h1 className="guide-title">A living Panchang and community calendar for Hindu heritage, rituals, and everyday culture.</h1>
+                <h2>A living Panchang and community calendar for Hindu heritage, rituals, and everyday culture.</h2>
                 <div className="guide-cta-row">
                   <a href="#calendar" className="guide-btn guide-btn-primary">View Calendar</a>
                   <a href="#about" className="guide-btn guide-btn-ghost">Learn about the holidays</a>
@@ -568,6 +638,140 @@ export default function HomePage() {
               calendar and Panchang experience.
             </p>
           </div>
+
+          <div className="location-banner">
+            <span>{locationStatus}</span>
+            <div className="location-banner-actions">
+              <a href="/privacy-policy">Privacy</a>
+              <a href="/settings">Settings</a>
+              <button onClick={enableLocation}>Use my location</button>
+            </div>
+          </div>
+
+          <section className="calendar-frame-wrap">
+            <div className="event-list-panel">
+              <div className="panel-head">
+                <div>
+                  <h2>{selectedDayEvents.length > 0 ? "Selected day events" : "Upcoming events"}</h2>
+                  <p className="panel-subtitle">
+                    {selectedDayEvents.length > 0 ? getDateHeading(selectedDate) : `From ${getDateHeading(selectedDate)} in ${resolvedCityName}`}
+                  </p>
+                </div>
+                <label className="city-filter">
+                  <span>City</span>
+                  <select value={selectedCityId} onChange={(event) => handleCityChange(event.target.value)}>
+                    {CITIES.map((city) => (
+                      <option key={city.id} value={city.id}>{city.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {selectedDay ? (
+                <div className="selected-day-panel">
+                  <div>
+                    <p className="selected-day-kicker">Selected Panchang</p>
+                    <h3>{getDateHeading(selectedDate)}</h3>
+                  </div>
+                  <div className="selected-day-grid">
+                    <div>
+                      <span>Tithi</span>
+                      <strong>{selectedDay.tithi}</strong>
+                    </div>
+                    <div>
+                      <span>Nakshatra</span>
+                      <strong>{selectedDay.nakshatra}</strong>
+                    </div>
+                    <div>
+                      <span>Sunrise</span>
+                      <strong>{formatClock(selectedDay.sunrise)}</strong>
+                    </div>
+                    <div>
+                      <span>Sunset</span>
+                      <strong>{formatClock(selectedDay.sunset)}</strong>
+                    </div>
+                  </div>
+                  {selectedDay.festivals.length > 0 ? (
+                    <div className="selected-day-tags">
+                      {selectedDay.festivals.map((festival) => (
+                        <span key={festival}>{festival}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="event-list-scroll">
+                {contentLoading && visibleUpcoming.length === 0 ? (
+                  <p className="panel-empty">Loading upcoming events...</p>
+                ) : null}
+
+                {!contentLoading && visibleUpcoming.length === 0 ? (
+                  <p className="panel-empty">No events are scheduled for this city and date selection yet.</p>
+                ) : null}
+
+                {visibleUpcoming.map((item) => (
+                  <article className="event-row" key={item.id}>
+                    <span className="event-dot" aria-hidden="true" />
+                    <div>
+                      <h3>{item.title}</h3>
+                      <p>{formatEventDetail(item)}</p>
+                      <span className="event-chip">{item.event_category}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="panel-timezone">
+                <span className="tz-icon" aria-hidden="true">◔</span>
+                <span>Events shown in</span>
+                <strong>{resolvedTimezone} • {resolvedCityName}</strong>
+              </div>
+            </div>
+
+            <div className="month-panel">
+              <h1>Dharmic Days and Hindu Holidays</h1>
+
+              <div className="month-toolbar-shell">
+                <span className="month-toolbar-label">Calendar month</span>
+                <strong>{getMonthLabel(monthKey)}</strong>
+              </div>
+
+              <div className="calendar-shell">
+                <DayPicker
+                  mode="single"
+                  month={selectedMonth}
+                  selected={selectedCalendarDate}
+                  onMonthChange={handleMonthChange}
+                  onSelect={handleDaySelect}
+                  showOutsideDays
+                  weekStartsOn={1}
+                  modifiers={{
+                    festival: festivalDays,
+                    hasEvent: eventDays,
+                    highlight: highlightDays,
+                  }}
+                  modifiersClassNames={{
+                    festival: "rr-day-festival",
+                    hasEvent: "rr-day-event",
+                    highlight: "rr-day-highlight",
+                  }}
+                  formatters={{
+                    formatWeekdayName: (date) =>
+                      date.toLocaleDateString(undefined, {
+                        weekday: "short",
+                      }),
+                  }}
+                  className="rangroots-daypicker"
+                />
+              </div>
+
+              <div className="month-footer">
+                <span>Panchang and events update with the selected month, city, and saved location.</span>
+                <strong>{savedCoords ? `Location-assisted view • ${resolvedCityName}` : `City view • ${resolvedCityName}`}</strong>
+              </div>
+            </div>
+          </section>
 
           <section className="guide-sections" id="calendar">
             {contentLoading && guideGroups.length === 0 ? (
