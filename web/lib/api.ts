@@ -21,10 +21,35 @@ export interface DailyPanchang {
 }
 
 export interface FestivalEntry {
+  id: string;
   name: string;
   date: string; // YYYY-MM-DD, city-local
+  end_date?: string;
   category: "festival" | "deity" | "observance" | "other";
   description?: string;
+  type?: string;
+  rule_hint?: string;
+  year?: number;
+}
+
+export interface CalendarHighlight {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  category: "festival" | "deity" | "observance" | "other";
+}
+
+interface FestivalsApiResponse {
+  year: number;
+  city_id: string;
+  festivals: FestivalEntry[];
+}
+
+interface CalendarHighlightsApiResponse {
+  month: string;
+  city_id: string;
+  highlights: CalendarHighlight[];
 }
 
 export interface EventSummary {
@@ -52,10 +77,25 @@ export async function getDailyPanchang(date: string, cityId: string): Promise<Da
   return res.json();
 }
 
+export async function getDailyPanchangByLocation(date: string, lat: number, lng: number): Promise<DailyPanchang> {
+  const params = new URLSearchParams({ date, lat: String(lat), lng: String(lng) });
+  const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/daily?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch local panchang");
+  return res.json();
+}
+
 export async function getFestivals(year: number, cityId: string): Promise<FestivalEntry[]> {
   const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/festivals?year=${year}&city_id=${cityId}`);
   if (!res.ok) throw new Error("Failed to fetch festivals");
-  return res.json();
+  const payload = (await res.json()) as FestivalsApiResponse;
+  return payload.festivals;
+}
+
+export async function getCalendarHighlights(month: string, cityId: string): Promise<CalendarHighlight[]> {
+  const res = await fetch(`${CALENDAR_API_BASE}/api/calendar/highlights?month=${month}&city_id=${cityId}`);
+  if (!res.ok) throw new Error("Failed to fetch calendar highlights");
+  const payload = (await res.json()) as CalendarHighlightsApiResponse;
+  return payload.highlights;
 }
 
 export async function listEvents(params: {

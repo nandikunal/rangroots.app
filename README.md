@@ -35,18 +35,6 @@ Rationale: the website needs strong SEO and fast first paint (e.g. someone searc
 
 ```
 rangroots.app/
-├── mobile/                 # Flutter app
-│   ├── lib/
-│   │   ├── screens/
-│   │   │   ├── home_screen.dart
-│   │   │   ├── calendar_screen.dart
-│   │   │   ├── events_screen.dart
-│   │   │   ├── event_detail_screen.dart
-│   │   │   └── submit_event_screen.dart
-│   │   ├── models/
-│   │   ├── services/       # API clients for calendar + events services
-│   │   └── main.dart
-│   └── pubspec.yaml
 ├── web/                    # Next.js website
 │   ├── app/
 │   │   ├── page.tsx                    # Home
@@ -63,18 +51,17 @@ rangroots.app/
 
 ## Getting started
 
-### Mobile (Flutter)
-
-```bash
-cd mobile
-flutter pub get
-flutter run
-```
-
 ### Web (Next.js)
 
 ```bash
 cd web
+npm install
+npm run dev
+```
+
+### From repository root (workspace scripts)
+
+```bash
 npm install
 npm run dev
 ```
