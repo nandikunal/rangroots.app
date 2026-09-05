@@ -13,11 +13,16 @@ export default function PrivacyPolicyPage() {
         preferred city or location profile in the app. We keep cached data minimal and ephemeral, and you can
         revoke permission or clear saved local data in the settings panel at any time.
       </p>
+      <p>
+        For the MVP experience, location consent state, preferred city, and optional saved coordinates are kept in
+        your browser storage so the homepage and settings page can stay in sync without requiring an account.
+      </p>
       <h2>Location data handling</h2>
       <ul>
         <li>Browser location is requested only after explicit user consent.</li>
         <li>Coordinates are used client-side for immediate Panchang calculation, or sent only to the app backend for local date/time calculations.</li>
         <li>Location data is not used for tracking, ad targeting, or third-party analytics.</li>
+        <li>Preferred city and local consent state are stored only in this browser until you clear them.</li>
       </ul>
       <h2>Settings and controls</h2>
       <p>

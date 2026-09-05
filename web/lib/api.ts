@@ -40,6 +40,21 @@ export interface CalendarHighlight {
   category: "festival" | "deity" | "observance" | "other";
 }
 
+export interface HomepageContentResponse {
+  festivals: FestivalEntry[];
+  highlights: CalendarHighlight[];
+  events: EventSummary[];
+  errors: string[];
+}
+
+export interface HomepageContentRequest {
+  month?: string;
+  year?: number;
+  cityId?: string;
+  lat?: number;
+  lng?: number;
+}
+
 interface FestivalsApiResponse {
   year: number;
   city_id: string;
@@ -96,6 +111,18 @@ export async function getCalendarHighlights(month: string, cityId: string): Prom
   if (!res.ok) throw new Error("Failed to fetch calendar highlights");
   const payload = (await res.json()) as CalendarHighlightsApiResponse;
   return payload.highlights;
+}
+
+export async function getHomepageContent(params?: HomepageContentRequest): Promise<HomepageContentResponse> {
+  const res = await fetch("/api/homepage-content", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params ?? {}),
+  });
+  if (!res.ok) throw new Error("Failed to fetch homepage content");
+  return res.json();
 }
 
 export async function listEvents(params: {

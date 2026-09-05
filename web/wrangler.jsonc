@@ -9,6 +9,8 @@
     "binding": "ASSETS"
   },
   "vars": {
+    "CALENDAR_API_BASE": "https://rangroots.onrender.com",
+    "EVENTS_API_BASE": "https://rangroots-events-service.onrender.com",
     "NEXT_PUBLIC_CALENDAR_API_BASE": "https://rangroots.onrender.com",
     "NEXT_PUBLIC_EVENTS_API_BASE": "https://rangroots-events-service.onrender.com"
   }

@@ -47,10 +47,62 @@ Set these in `wrangler.jsonc` (`vars`) for values safe to commit, or via the Clo
 dashboard (**Workers & Pages → your worker → Settings → Variables**) for anything
 secret:
 
-- `NEXT_PUBLIC_CALENDAR_API_BASE` — the deployed `calendar_service` URL on Render
-- `NEXT_PUBLIC_EVENTS_API_BASE` — the deployed `events_service` URL on Render
+- `CALENDAR_API_BASE` — server-side base URL used by `/api/homepage-content` for the deployed `calendar_service`
+- `EVENTS_API_BASE` — server-side base URL used by `/api/homepage-content` for the deployed `events_service`
+- `NEXT_PUBLIC_CALENDAR_API_BASE` — optional client-side calendar API base for routes that fetch from the browser
+- `NEXT_PUBLIC_EVENTS_API_BASE` — optional client-side events API base for routes that fetch from the browser
 
-Update these once the exact Render URLs for both services are finalized.
+Current checked-in values in `web/wrangler.jsonc`:
+
+- `CALENDAR_API_BASE=https://rangroots.onrender.com`
+- `EVENTS_API_BASE=https://rangroots-events-service.onrender.com`
+- `NEXT_PUBLIC_CALENDAR_API_BASE=https://rangroots.onrender.com`
+- `NEXT_PUBLIC_EVENTS_API_BASE=https://rangroots-events-service.onrender.com`
+
+The homepage now relies on the same-origin route `POST /api/homepage-content`, which calls
+the backend APIs server-side. That means the production landing page depends primarily on
+`CALENDAR_API_BASE` and `EVENTS_API_BASE`, not on browser CORS.
+
+## Health checks and smoke tests
+
+Validate the deployed backend services directly:
+
+```bash
+curl -s https://rangroots.onrender.com/api/calendar/festivals?year=2026\&city_id=berlin
+curl -s https://rangroots.onrender.com/api/calendar/highlights?month=2026-09\&city_id=berlin
+curl -s https://rangroots.onrender.com/api/calendar/location-context?lat=52.52\&lng=13.4
+curl -s https://rangroots-events-service.onrender.com/api/events?city_id=berlin\&from=2026-09-01
+```
+
+Validate the deployed frontend aggregation path:
+
+```bash
+curl -s -X POST https://<your-frontend-domain>/api/homepage-content \
+  -H 'Content-Type: application/json' \
+  --data '{"month":"2026-09","year":2026,"cityId":"berlin","lat":52.52,"lng":13.4}'
+```
+
+Expected behavior:
+
+- The calendar service returns `festivals`, `highlights`, and location-context data.
+- The events service returns at least the Berlin event seed data for the MVP path.
+- The frontend route returns aggregated `festivals`, `highlights`, `events`, and an empty `errors` array.
+
+## Deployment contract summary
+
+- Cloudflare Worker hostname serves the Next.js app and `api/homepage-content`.
+- Render calendar service must expose:
+  - `GET /api/calendar/daily`
+  - `GET /api/calendar/monthly`
+  - `GET /api/calendar/festivals`
+  - `GET /api/calendar/highlights`
+  - `GET /api/calendar/location-context`
+- Render events service must expose:
+  - `GET /api/events`
+  - `GET /api/events/{event_id}`
+
+If the homepage shows missing live data in production, first check the frontend route
+`/api/homepage-content`, then check the two backend base URLs independently.
 
 ## Why Workers + OpenNext, not Pages + next-on-pages
 

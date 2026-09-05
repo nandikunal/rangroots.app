@@ -66,6 +66,28 @@ npm install
 npm run dev
 ```
 
+## Deployment contract
+
+The web app expects two backend base URLs:
+
+- `CALENDAR_API_BASE`
+- `EVENTS_API_BASE`
+
+For Cloudflare Workers deployments, these are configured in `web/wrangler.jsonc` and consumed
+server-side by `web/app/api/homepage-content/route.ts`.
+
+The landing page does not call the deployed APIs directly from the browser anymore. Instead it uses:
+
+- `POST /api/homepage-content`
+
+That route aggregates:
+
+- `GET /api/calendar/festivals`
+- `GET /api/calendar/highlights`
+- `GET /api/events`
+
+Health-check examples are documented in `docs/deployment.md`.
+
 ## License
 
 TBD — to be decided before public release. Internal development for now.
