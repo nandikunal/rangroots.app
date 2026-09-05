@@ -3,15 +3,16 @@
    generous whitespace. Deliberately calmer than a dense blog-style layout. */
 
 :root {
-  --zen-indigo-950: #1a1730;
-  --zen-indigo-900: #241f42;
-  --zen-indigo-800: #322a5c;
-  --zen-saffron-400: #f4a94f;
-  --zen-saffron-300: #f8c07a;
-  --zen-rose-300: #f0b7a4;
-  --zen-mist: #f7f4ef;
-  --zen-ink: #2c2640;
-  --zen-ink-soft: #6b6280;
+  --zen-indigo-950: #2b1a18;
+  --zen-indigo-900: #3d221e;
+  --zen-indigo-800: #5a2f23;
+  --zen-saffron-400: #ea7c1d;
+  --zen-saffron-300: #f4b247;
+  --zen-rose-300: #f7cf9e;
+  --zen-mist: #fff7ec;
+  --zen-ink: #2e201b;
+  --zen-ink-soft: #6f5e54;
+  --zen-leaf-600: #2f7b61;
 }
 
 * {
@@ -19,7 +20,7 @@
 }
 
 body {
-  background: var(--zen-mist);
+  background: radial-gradient(circle at top right, #ffe8c4 0%, #fff7ec 42%, #f8f2e8 100%);
   color: var(--zen-ink);
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -135,9 +136,9 @@ body {
 
 .guide-page {
   min-height: 100vh;
-  background: #000;
+  background: radial-gradient(circle at top left, rgba(244, 178, 71, 0.16), rgba(255, 247, 236, 0));
   color: #22253a;
-  padding: 0 0 2rem;
+  padding: 0 0 1rem;
 }
 
 .brand-emblem {
@@ -194,15 +195,15 @@ body {
 }
 
 .guide-page-inner {
-  background: linear-gradient(180deg, #fffaf4 0%, #f6f2ec 52%, #eef2ee 100%);
+  background: linear-gradient(180deg, #fff8ef 0%, #fff3df 46%, #f2efe3 100%);
   border-top: 1px solid rgba(87, 64, 46, 0.08);
 }
 
 .guide-page {
   min-height: 100vh;
-  background: #000;
+  background: radial-gradient(circle at top left, rgba(244, 178, 71, 0.16), rgba(255, 247, 236, 0));
   color: #22253a;
-  padding: 0 0 2rem;
+  padding: 0 0 1rem;
 }
 
 .guide-topbar {
@@ -269,7 +270,7 @@ body {
 }
 
 .guide-nav a {
-  color: #534d63;
+  color: #6a3922;
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 700;
@@ -278,9 +279,9 @@ body {
 }
 
 .guide-menu-btn {
-  border: 1px solid rgba(27, 30, 45, 0.14);
-  background: rgba(255, 255, 255, 0.7);
-  color: #2d2439;
+  border: 1px solid rgba(115, 66, 25, 0.2);
+  background: rgba(255, 245, 228, 0.95);
+  color: #5f341c;
   border-radius: 999px;
   padding: 0.65rem 1.05rem;
   font-weight: 700;
@@ -306,7 +307,7 @@ body {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.74rem;
-  color: #8c4d1f;
+  color: #b95f1b;
 }
 
 .guide-title {
@@ -316,7 +317,7 @@ body {
   font-size: clamp(2.2rem, 2.8vw + 1.1rem, 4.4rem);
   line-height: 1.03;
   letter-spacing: -0.04em;
-  color: #2c1f33;
+  color: #3f2418;
 }
 
 .guide-cta-row {
@@ -340,19 +341,19 @@ body {
 }
 
 .guide-btn-primary {
-  background: #cf6a2b;
+  background: linear-gradient(135deg, #d86e18, #b85411);
   color: #fff;
-  box-shadow: 0 8px 24px -10px rgba(207, 106, 43, 0.7);
+  box-shadow: 0 10px 28px -12px rgba(216, 110, 24, 0.8);
 }
 
 .guide-btn-primary:hover {
-  background: #b95c23;
+  background: linear-gradient(135deg, #c76115, #a74a0f);
 }
 
 .guide-btn-ghost {
-  border-color: #cf6a2b;
-  color: #773516;
-  background: rgba(255, 255, 255, 0.55);
+  border-color: #d9782b;
+  color: #7a3a18;
+  background: rgba(255, 249, 240, 0.9);
 }
 
 .guide-poster {
@@ -397,13 +398,13 @@ body {
 .guide-intro {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 1.25rem 2.1rem;
+  padding: 0 1.25rem 1rem;
 }
 
 .guide-intro p {
   margin: 0;
   padding: 1rem 1.1rem;
-  border-left: 4px solid #cf6a2b;
+  border-left: 4px solid #da6f17;
   background: rgba(255, 255, 255, 0.62);
   color: #495069;
   line-height: 1.7;
@@ -412,11 +413,11 @@ body {
 .guide-sections {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 1.25rem 2.7rem;
+  padding: 0 1.25rem 2rem;
 }
 
 .guide-group {
-  margin-top: 2rem;
+  margin-top: 1.25rem;
 }
 
 .guide-status {
@@ -432,7 +433,7 @@ body {
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  border-bottom: 1px solid rgba(119, 53, 22, 0.16);
+  border-bottom: 1px solid rgba(183, 98, 27, 0.22);
   padding-bottom: 0.55rem;
 }
 
@@ -440,7 +441,7 @@ body {
   margin: 0;
   font-family: var(--font-display), serif;
   font-size: clamp(1.4rem, 1vw + 1rem, 2rem);
-  color: #2f2335;
+  color: #3f261b;
 }
 
 .guide-group-head p {
@@ -572,13 +573,13 @@ body {
 }
 
 .location-banner {
-  max-width: 1880px;
-  margin: 0 auto 1rem;
-  background: #eef4ff;
-  color: #1f3c75;
-  border: 1px solid #d6e4ff;
+  max-width: 1160px;
+  margin: 0 auto 0.55rem;
+  background: linear-gradient(180deg, #fff7ea 0%, #fff0d8 100%);
+  color: #6b3a1c;
+  border: 1px solid rgba(215, 139, 48, 0.3);
   border-radius: 10px;
-  padding: 0.8rem 1rem;
+  padding: 0.65rem 0.82rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -588,35 +589,35 @@ body {
 
 .location-banner button {
   border: none;
-  background: #1d4ed8;
+  background: linear-gradient(135deg, #e17314, #b85a12);
   color: white;
   border-radius: 8px;
-  padding: 0.56rem 0.9rem;
+  padding: 0.5rem 0.8rem;
   cursor: pointer;
   font-weight: 600;
 }
 
 .calendar-frame-page {
   min-height: 100vh;
-  padding: 2.6rem;
-  background: #f6f7fb;
+  padding: 1.25rem 1.15rem 0.7rem;
+  background: linear-gradient(180deg, rgba(255, 242, 224, 0.6) 0%, rgba(255, 247, 236, 0.9) 42%, rgba(255, 248, 239, 0.2) 100%);
 }
 
 .calendar-frame-wrap {
-  max-width: 1880px;
+  max-width: 1160px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 590px minmax(860px, 1fr);
-  gap: 2.8rem;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 1.05rem;
   align-items: start;
 }
 
 .event-list-panel,
 .month-panel {
-  background: #fff;
-  border: 1px solid #e6eaf1;
-  border-radius: 7px;
-  box-shadow: 0 1px 4px rgba(24, 36, 54, 0.06);
+  background: linear-gradient(180deg, #fffdf7 0%, #fff7ea 100%);
+  border: 1px solid rgba(214, 145, 70, 0.24);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px -24px rgba(100, 47, 18, 0.42);
 }
 
 .event-list-panel {
@@ -627,21 +628,21 @@ body {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  border-bottom: 1px solid #edf1f7;
-  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid rgba(214, 145, 70, 0.2);
+  padding: 0.62rem 0.74rem;
 }
 
 .panel-head h2 {
   margin: 0;
-  font-size: 1.78rem;
+  font-size: 1.38rem;
   font-family: var(--font-display), serif;
   font-weight: 600;
-  color: #232f46;
+  color: #4a2a1b;
 }
 
 .panel-subtitle {
   margin: 0.2rem 0 0;
-  color: #71809b;
+  color: #7f5d47;
   font-size: 0.86rem;
 }
 
@@ -672,23 +673,23 @@ body {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #60708d;
+  color: #84553d;
 }
 
 .city-filter select {
   min-width: 170px;
-  padding: 0.55rem 0.8rem;
-  border: 1px solid #dbe4f2;
+  padding: 0.48rem 0.68rem;
+  border: 1px solid rgba(214, 145, 70, 0.28);
   border-radius: 8px;
-  background: #f7f9fc;
-  color: #2c3952;
+  background: #fff8ef;
+  color: #533528;
   font-weight: 600;
 }
 
 .selected-day-panel {
-  border-bottom: 1px solid #edf1f7;
-  padding: 0.95rem 1rem;
-  background: linear-gradient(180deg, #fbfcff 0%, #f4f7fc 100%);
+  border-bottom: 1px solid rgba(214, 145, 70, 0.2);
+  padding: 0.72rem 0.8rem;
+  background: linear-gradient(180deg, #fff9ee 0%, #fff2dc 100%);
 }
 
 .selected-day-kicker {
@@ -697,17 +698,17 @@ body {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #7c88a3;
+  color: #8f5b39;
 }
 
 .selected-day-panel h3 {
   margin: 0.3rem 0 0;
-  font-size: 1.1rem;
-  color: #223249;
+  font-size: 1rem;
+  color: #50301f;
 }
 
 .selected-day-grid {
-  margin-top: 0.85rem;
+  margin-top: 0.6rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.7rem;
@@ -722,11 +723,11 @@ body {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #7b879f;
+  color: #88644f;
 }
 
 .selected-day-grid strong {
-  color: #24314a;
+  color: #4f3222;
   font-size: 0.96rem;
 }
 
@@ -739,17 +740,17 @@ body {
 
 .selected-day-tags span {
   border-radius: 999px;
-  background: rgba(28, 104, 215, 0.1);
-  color: #1c68d7;
+  background: rgba(218, 111, 23, 0.14);
+  color: #b85a12;
   padding: 0.32rem 0.7rem;
   font-size: 0.76rem;
   font-weight: 700;
 }
 
 .event-list-scroll {
-  max-height: 448px;
+  max-height: 312px;
   overflow-y: auto;
-  padding: 0.95rem 1rem 1.1rem;
+  padding: 0.72rem 0.82rem 0.86rem;
 }
 
 .event-row {
@@ -762,22 +763,22 @@ body {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: #1666dd;
+  background: var(--zen-leaf-600);
   margin-top: 0.4rem;
   flex: 0 0 auto;
 }
 
 .event-row h3 {
   margin: 0;
-  color: #223249;
-  font-size: 1rem;
+  color: #4a2d1e;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .event-row p {
   margin: 0.17rem 0 0;
-  color: #57657d;
-  font-size: 0.93rem;
+  color: #6b584a;
+  font-size: 0.86rem;
 }
 
 .event-chip {
@@ -785,8 +786,8 @@ body {
   margin-top: 0.55rem;
   border-radius: 999px;
   padding: 0.24rem 0.62rem;
-  background: rgba(28, 104, 215, 0.08);
-  color: #1c68d7;
+  background: rgba(47, 123, 97, 0.14);
+  color: #236850;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: capitalize;
@@ -794,28 +795,28 @@ body {
 
 .panel-empty {
   margin: 0;
-  color: #6a768c;
+  color: #7a6557;
   font-size: 0.94rem;
 }
 
 .panel-timezone {
-  border-top: 1px solid #edf1f7;
-  border-bottom: 1px solid #edf1f7;
+  border-top: 1px solid rgba(214, 145, 70, 0.2);
+  border-bottom: 1px solid rgba(214, 145, 70, 0.2);
   display: flex;
   gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
-  padding: 0.7rem 0.95rem;
-  color: #57657d;
+  padding: 0.58rem 0.8rem;
+  color: #6c5a4d;
   font-size: 0.85rem;
 }
 
 .panel-timezone strong {
-  color: #3d4f68;
+  color: #563422;
 }
 
 .tz-icon {
-  color: #3f5370;
+  color: #7a4f2c;
 }
 
 .panel-powered {
@@ -826,13 +827,13 @@ body {
 }
 
 .month-panel {
-  padding: 0.95rem 1.08rem 0.78rem;
+  padding: 0.72rem 0.8rem 0.7rem;
 }
 
 .month-panel h1 {
-  margin: 0.22rem 0 0.75rem;
-  font-size: 2.45rem;
-  color: #2b364a;
+  margin: 0.15rem 0 0.52rem;
+  font-size: 2rem;
+  color: #4b2b1c;
   font-family: var(--font-display), serif;
   font-weight: 600;
 }
@@ -849,8 +850,8 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.65rem;
-  margin-bottom: 0.9rem;
-  color: #2d3b53;
+  margin-bottom: 0.55rem;
+  color: #5c3a29;
 }
 
 .month-toolbar-label {
@@ -858,106 +859,94 @@ body {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #7a8598;
+  color: #8b6751;
 }
 
 .calendar-shell {
-  border: 1px solid #edf1f7;
+  border: 1px solid rgba(214, 145, 70, 0.22);
   border-radius: 10px;
   overflow: hidden;
-  background: #fff;
+  background: #fffcf5;
+  padding: 0.6rem;
 }
 
-.calendar-shell .fc {
+.rangroots-daypicker {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
-.calendar-shell .fc-toolbar {
-  padding: 0.9rem 1rem 0;
-  margin-bottom: 0.8rem;
+.rangroots-daypicker .rdp-months {
+  justify-content: center;
 }
 
-.calendar-shell .fc-toolbar-title {
+.rangroots-daypicker .rdp-caption_label {
   font-family: var(--font-display), serif;
-  font-size: 1.3rem;
-  color: #223249;
+  font-size: 1.12rem;
+  color: #4f2e20;
 }
 
-.calendar-shell .fc-button {
-  border: 1px solid #dce5f2 !important;
-  background: #f7f9fc !important;
-  color: #30405b !important;
-  box-shadow: none !important;
-  text-transform: none !important;
+.rangroots-daypicker .rdp-button_previous,
+.rangroots-daypicker .rdp-button_next {
+  border: 1px solid rgba(214, 145, 70, 0.3);
+  background: #fff3dd;
+  color: #6e4226;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
 }
 
-.calendar-shell .fc-button-primary:not(:disabled).fc-button-active,
-.calendar-shell .fc-button-primary:not(:disabled):active,
-.calendar-shell .fc-button:hover {
-  background: #e9f0ff !important;
-  border-color: #bfd0f4 !important;
+.rangroots-daypicker .rdp-button_previous:hover,
+.rangroots-daypicker .rdp-button_next:hover {
+  background: #ffe8bd;
+  border-color: #da9655;
 }
 
-.calendar-shell .fc-daygrid-day-number {
-  color: #31425f;
-  font-weight: 700;
-  padding: 0.45rem 0.55rem 0 0;
-}
-
-.calendar-shell .fc-col-header-cell-cushion {
-  color: #6f7d95;
+.rangroots-daypicker .rdp-weekday {
+  color: #87634d;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  text-decoration: none;
+  text-transform: uppercase;
 }
 
-.calendar-shell .fc-theme-standard td,
-.calendar-shell .fc-theme-standard th,
-.calendar-shell .fc-scrollgrid {
-  border-color: #edf1f7;
-}
-
-.calendar-shell .fc-daygrid-day-frame {
-  min-height: 120px;
-  padding-bottom: 0.5rem;
-}
-
-.calendar-shell .fc-day-today {
-  background: rgba(28, 104, 215, 0.05) !important;
-}
-
-.rangroots-day-meta {
-  display: grid;
-  gap: 0.18rem;
-  padding: 0 0.45rem 0.45rem;
-}
-
-.rangroots-day-tithi {
-  color: #5d6880;
-  font-size: 0.72rem;
+.rangroots-daypicker .rdp-day_button {
+  color: #553727;
   font-weight: 700;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
 }
 
-.rangroots-day-count {
-  color: #a0592f;
-  font-size: 0.68rem;
-  font-weight: 700;
+.rangroots-daypicker .rdp-day_selected .rdp-day_button,
+.rangroots-daypicker .rdp-selected .rdp-day_button,
+.rangroots-daypicker .rdp-day_selected .rdp-day_button:hover,
+.rangroots-daypicker .rdp-selected .rdp-day_button:hover {
+  background: linear-gradient(135deg, #dd7318, #ba5a12);
+  color: #fff;
 }
 
-.calendar-shell .fc-event {
-  border: 0;
-  border-radius: 999px;
-  padding: 0.12rem 0.3rem;
-  font-size: 0.74rem;
+.rangroots-daypicker .rdp-day_today .rdp-day_button,
+.rangroots-daypicker .rdp-today .rdp-day_button {
+  border: 1px solid rgba(47, 123, 97, 0.4);
+  background: rgba(47, 123, 97, 0.08);
 }
 
-.calendar-shell .rangroots-highlight {
-  background: #1c68d7;
+.rangroots-daypicker .rdp-selected.rdp-today .rdp-day_button,
+.rangroots-daypicker .rdp-today.rdp-selected .rdp-day_button {
+  border-color: rgba(186, 90, 18, 0.6);
+  background: linear-gradient(135deg, #dd7318, #ba5a12);
+  color: #fff;
 }
 
-.calendar-shell .rangroots-community-event {
-  background: #a95a2b;
+.rangroots-daypicker .rdp-day.rr-day-highlight .rdp-day_button {
+  box-shadow: inset 0 -2px 0 #d96d14;
+}
+
+.rangroots-daypicker .rdp-day.rr-day-festival .rdp-day_button {
+  box-shadow: inset 0 -2px 0 #2f7b61;
+}
+
+.rangroots-daypicker .rdp-day.rr-day-event .rdp-day_button {
+  color: #2f7b61;
 }
 
 .toolbar-left,
@@ -1034,14 +1023,14 @@ body {
   align-items: center;
   gap: 0.7rem;
   flex-wrap: wrap;
-  padding-top: 0.65rem;
-  color: #57657d;
+  padding-top: 0.52rem;
+  color: #6c5a4d;
   font-size: 0.87rem;
 }
 
 .month-footer strong {
   margin-left: auto;
-  color: #51607a;
+  color: #5a3826;
   font-size: 0.85rem;
 }
 
@@ -1073,7 +1062,7 @@ body {
     overflow-x: auto;
   }
 
-  .calendar-shell .fc {
-    min-width: 760px;
+  .rangroots-daypicker {
+    min-width: 310px;
   }
 }
